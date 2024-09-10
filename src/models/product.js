@@ -23,6 +23,10 @@ const productSchema = new Schema(
         code: {
             type: String,
             required: true
+        },
+        category: {
+            type: mongoose.SchemaTypes.ObjectId,
+            ref: "Category"
         }
     },
     { timestamps: true }

@@ -17,10 +17,6 @@ dotenv.config();
 
 app.use(cors());
 app.use(express.json());
-app.get('/', (req, res) => {
-    res.json('Wellcome');
-});
-
 app.use('/api/product', productRoute)
 app.use('/api/category', productCateRoute)
 app.use('/api/ingre-category', ingreCateRoute)
