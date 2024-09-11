@@ -1,6 +1,7 @@
 import Product from "../models/product";
 import ProductIngredient from "../models/productIngredient";
 import ProductPrice from "../models/productPrice";
+import ProductSize from "../models/productSize";
 import { convertNameToCode } from "../utils/convertNameToCode";
 
 export const createProduct = async (req, res) => {
@@ -91,9 +92,38 @@ export const getGridData = async (req, res) => {
                     as: 'ingredients',
                     pipeline: [
                         {
+                            $lookup: {
+                                from: 'ingredients',
+                                localField: 'ingredients.ingredient',
+                                foreignField: '_id',
+                                as: 'productIngredients',
+                            }
+                        },
+                        {
                             $project: {
+                                "_id": 0,
                                 priceType: 1,
-                                ingredients: 1
+                                data: {
+                                    $map: {
+                                        input: "$ingredients",
+                                        as: "ingre",
+                                        in: {
+                                            quantity: "$$ingre.quantity",
+                                            ingredient: {
+                                                $arrayElemAt: [
+                                                    {
+                                                        $filter: {
+                                                            input: "$productIngredients",
+                                                            as: "ingredientDetail",
+                                                            cond: { $eq: ["$$ingredientDetail._id", "$$ingre.ingredient"] }
+                                                        }
+                                                    },
+                                                    0
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     ]
@@ -108,7 +138,8 @@ export const getGridData = async (req, res) => {
                     pipeline: [
                         {
                             $project: {
-                                priceBySize: 1
+                                priceBySize: 1,
+                                "_id": 0,
                             }
                         }
                     ]
@@ -116,6 +147,53 @@ export const getGridData = async (req, res) => {
             },
             {
                 $unwind: "$priceBySize"
+            },
+            {
+                $addFields: {
+                    priceBySize: "$priceBySize.priceBySize"
+                }
+            },
+            {
+                $lookup: {
+                    from: 'productsizes',
+                    localField: 'priceBySize.size',
+                    foreignField: '_id',
+                    as: 'size'
+                }
+            },
+            {
+                $project: {
+                    name: 1,
+                    img: 1,
+                    priceType: 1,
+                    singlePrice: 1,
+                    status: 1,
+                    code: 1,
+                    category: 1,
+                    ingredients: 1,
+                    priceBySize: {
+                        $map: {
+                            input: "$priceBySize",
+                            as: "price",
+                            in: {
+                                price: "$$price.price",
+                                size: {
+                                    $arrayElemAt: [
+                                        {
+                                            $filter: {
+                                                input: "$size",
+                                                as: "priceDetail",
+                                                cond: { $eq: ["$$priceDetail._id", "$$price.size"] }
+                                            }
+                                        },
+                                        0
+                                    ]
+                                }
+                            }
+                        }
+                    },
+
+                }
             }
         ])
         const total = await Product.count()
