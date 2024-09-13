@@ -20,7 +20,7 @@ export const createProductSize = async (req, res) => {
 
 export const getListProductSize = async (req, res) => {
     try {
-        const size = await ProductSize.find({}).select('name code')
+        const size = await ProductSize.find({ code: { $ne: 'normal' } }).select('name code')
         res.json({
             status: "success",
             data: size

@@ -3,8 +3,8 @@ import mongoose, { Schema } from "mongoose";
 const priceBySizeSchema = new Schema(
     {
         size: {
-            type: mongoose.SchemaTypes.ObjectId,
-            ref: 'ProductSize',
+            type: String,
+            required: true,
         },
         price: {
             type: Number,

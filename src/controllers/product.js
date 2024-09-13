@@ -14,14 +14,8 @@ export const createProduct = async (req, res) => {
         const newProduct = await Product(productData).save()
         const productId = newProduct._id
 
-        if (product.priceType === 1) {
-            if (priceBySize && priceBySize.length > 0) {
-                await ProductPrice({ priceBySize, productId }).save()
-            }
-        }
-        if (ingredients && ingredients.length > 0) {
-            await Promise.all(ingredients.map(ingre => ProductIngredient({ ...ingre, productId }).save()))
-        }
+        await ProductPrice({ priceBySize, productId }).save()
+        await Promise.all(ingredients.map(ingre => ProductIngredient({ ...ingre, productId }).save()))
 
         res.json({
             status: "success",
@@ -157,8 +151,8 @@ export const getGridData = async (req, res) => {
                 $lookup: {
                     from: 'productsizes',
                     localField: 'priceBySize.size',
-                    foreignField: '_id',
-                    as: 'size'
+                    foreignField: 'code',
+                    as: 'size',
                 }
             },
             {
@@ -183,7 +177,7 @@ export const getGridData = async (req, res) => {
                                             $filter: {
                                                 input: "$size",
                                                 as: "priceDetail",
-                                                cond: { $eq: ["$$priceDetail._id", "$$price.size"] }
+                                                cond: { $eq: ["$$priceDetail.code", "$$price.size"] }
                                             }
                                         },
                                         0
@@ -191,9 +185,8 @@ export const getGridData = async (req, res) => {
                                 }
                             }
                         }
-                    },
-
-                }
+                    }
+                },
             }
         ])
         const total = await Product.count()

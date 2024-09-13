@@ -9,13 +9,6 @@ const productSchema = new Schema(
         img: {
             type: String
         },
-        priceType: {
-            type: Number,
-            default: 0
-        },
-        singlePrice: {
-            type: Number,
-        },
         status: {
             type: Boolean,
             default: true,
