@@ -1,8 +1,7 @@
-import Product from "../models/product";
-import ProductIngredient from "../models/productIngredient";
-import ProductPrice from "../models/productPrice";
-import ProductSize from "../models/productSize";
-import { convertNameToCode } from "../utils/convertNameToCode";
+import Product from "../../models/product/product";
+import ProductIngredient from "../../models/product/productIngredient";
+import ProductPrice from "../../models/product/productPrice";
+import { convertNameToCode } from "../../utils/convertNameToCode";
 
 export const createProduct = async (req, res) => {
     try {

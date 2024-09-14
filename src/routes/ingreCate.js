@@ -1,5 +1,5 @@
 import express from "express";
-import { createIngreCate, deleteById, getListIngreCate } from "../controllers/ingreCate";
+import { createIngreCate, deleteById, getListIngreCate } from "../controllers/ingredient/ingreCate";
 
 const route = express.Router()
 

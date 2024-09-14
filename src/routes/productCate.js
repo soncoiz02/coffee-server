@@ -1,5 +1,5 @@
 import express from "express";
-import { createProductCate, getListProductCate } from "../controllers/productCate";
+import { createProductCate, getListProductCate } from "../controllers/product/productCate";
 
 const route = express.Router()
 

@@ -1,5 +1,7 @@
-import Ingredient from "../models/ingredient"
-import { convertNameToCode } from "../utils/convertNameToCode"
+import Ingredient from "../../models/ingredient/ingredient"
+import IngredientDiary from "../../models/ingredient/ingredientDiary"
+import { convertNameToCode } from "../../utils/convertNameToCode"
+import { getIngredientDiaryContent } from "../../utils/ingredientDairyContent"
 
 export const createIngredient = async (req, res) => {
     try {
@@ -9,7 +11,14 @@ export const createIngredient = async (req, res) => {
             code: convertNameToCode(item.name)
         }))
         console.log(mappedData);
-        await Promise.all(mappedData.map(item => Ingredient(item).save()))
+        const ingredient = await Promise.all(mappedData.map(item => Ingredient(item).save()))
+
+        const diaryContent = getIngredientDiaryContent('create', { ingredient })
+        await IngredientDiary({
+            user: "Son Dzaivcl",
+            content: diaryContent
+        }).save()
+
         res.json({
             status: "success",
             message: "Thêm nguyên liệu thành công"

@@ -1,5 +1,5 @@
-import ProductCategory from "../models/category"
-import { convertNameToCode } from "../utils/convertNameToCode"
+import ProductCategory from "../../models/product/category"
+import { convertNameToCode } from "../../utils/convertNameToCode"
 
 export const createProductCate = async (req, res) => {
     try {

@@ -1,5 +1,5 @@
-import ProductSize from "../models/productSize"
-import { convertNameToCode } from "../utils/convertNameToCode"
+import ProductSize from "../../models/product/productSize"
+import { convertNameToCode } from "../../utils/convertNameToCode"
 
 export const createProductSize = async (req, res) => {
     try {

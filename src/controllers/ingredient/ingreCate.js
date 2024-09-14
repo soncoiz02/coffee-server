@@ -1,5 +1,5 @@
-import IngredientCategory from "../models/ingredientCategory"
-import { convertNameToCode } from "../utils/convertNameToCode"
+import IngredientCategory from "../../models/ingredient/ingredientCategory"
+import { convertNameToCode } from "../../utils/convertNameToCode"
 
 export const createIngreCate = async (req, res) => {
     try {
