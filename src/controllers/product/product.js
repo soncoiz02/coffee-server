@@ -53,11 +53,17 @@ export const getListProduct = async (req, res) => {
 
 export const getGridData = async (req, res) => {
     try {
-        // const { page, limit } = req.query
-        // const pageNum = page || 1
-        // const limitNum = limit || 10
-        // const skip = (pageNum - 1) * limitNum
+        const { page, limit } = req.query
+        const pageNum = page || 1
+        const limitNum = limit || 10
+        const skip = (pageNum - 1) * limitNum
         const products = await Product.aggregate([
+            {
+                $skip: skip
+            },
+            {
+                $limit: limitNum
+            },
             {
                 $lookup: {
                     from: 'categories',
@@ -215,6 +221,67 @@ export const getProductById = async (req, res) => {
             productPrice,
             productIngredient
         })
+    } catch (error) {
+        res.status(400).json({
+            status: "error",
+            message: error.message
+        })
+    }
+}
+
+export const getTotalAllProductCanCreate = async (req, res) => {
+    try {
+        const { page, limit } = req.query
+        const pageNum = page || 1
+        const limitNum = limit || 10
+        const skip = (pageNum - 1) * limitNum
+
+        const listProduct = await Product.find({}).select("_id name")
+
+        const ingredientByProduct = await Promise.all(listProduct.map(p => ProductIngredient.find({ productId: p._id }).populate({
+            path: "ingredients",
+            populate: {
+                path: "ingredient",
+                select: "quantity name"
+            }
+        })))
+
+        let totalProductWillCreate = []
+
+        ingredientByProduct.forEach((data, index) => {
+            data.forEach(item => {
+                const listQuantity = []
+                item.ingredients.forEach(ingre => {
+                    const totalIngreQuantity = ingre.ingredient.quantity
+                    const productIngreQuantity = ingre.quantity
+                    if (totalIngreQuantity > 0 && productIngreQuantity > 0) {
+                        listQuantity.push(Math.floor(totalIngreQuantity / productIngreQuantity))
+                    }
+                    else {
+                        listQuantity.push(0)
+                    }
+                })
+
+                const total = Math.min(...listQuantity)
+
+                totalProductWillCreate.push({
+                    productId: item.productId,
+                    size: item.priceType,
+                    total
+                })
+            })
+        })
+
+        const productCanCreate = listProduct.map((product) => {
+            const productItem = product._doc
+            const total = totalProductWillCreate.filter(p => p.productId.toString() === productItem._id.toString()).map(p => ({ size: p.size, totalProduct: p.total }))
+            return {
+                ...productItem,
+                productCanCreate: total
+            }
+        })
+
+        res.json(productCanCreate)
     } catch (error) {
         res.status(400).json({
             status: "error",

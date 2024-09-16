@@ -83,3 +83,37 @@ export const deleteById = async (req, res) => {
         })
     }
 }
+
+export const updateIngredientQuantity = async (req, res) => {
+    try {
+        const { id } = req.params
+        const { currentQuantity, additionalQuantity, type } = req.body
+        let quantity = 0
+        if (type === 'add-quantity') {
+            quantity = +currentQuantity + +additionalQuantity
+        }
+        else if (type === 'remove-quantity') {
+            quantity = +currentQuantity - +additionalQuantity
+        }
+        const resData = await Ingredient.findByIdAndUpdate({ _id: id }, { quantity }, { new: true })
+        const diaryContent = getIngredientDiaryContent(type, {
+            ingredient: resData,
+            updateData: {
+                quantity: additionalQuantity
+            }
+        })
+        await IngredientDiary({
+            user: "Son Dzaivcl",
+            content: diaryContent
+        }).save()
+        res.json({
+            status: 'success',
+            message: `Đã ${type === 'add-quantity' ? 'thêm vào' : 'bớt'} ${resData.name} ${additionalQuantity}(${resData.unit})`
+        })
+    } catch (error) {
+        res.status(400).json({
+            status: "error",
+            message: error.message
+        })
+    }
+}

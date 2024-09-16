@@ -7,9 +7,9 @@ export const getIngredientDiaryContent = (type, data) => {
             }
             return `Tạo thêm nguyên liệu: ${name}`
         case "add-quantity":
-            return `${ingredient.name}: Thêm ${updateData.quantity} (${unit})`
+            return `${ingredient.name}: Thêm ${updateData.quantity} (${ingredient.unit})`
         case "remove-quantity":
-            return `${ingredient.name}: Bớt ${updateData.quantity} (${unit})`
+            return `${ingredient.name}: Bớt ${updateData.quantity} (${ingredient.unit})`
         default:
             return ''
     }
