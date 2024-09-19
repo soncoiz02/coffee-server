@@ -2,6 +2,7 @@ import Product from "../../models/product/product";
 import ProductIngredient from "../../models/product/productIngredient";
 import ProductPrice from "../../models/product/productPrice";
 import { convertNameToCode } from "../../utils/convertNameToCode";
+import { getProductFilterOptions } from "../../utils/getFilterOption";
 
 export const createProduct = async (req, res) => {
     try {
@@ -57,13 +58,8 @@ export const getGridData = async (req, res) => {
         const pageNum = page || 1
         const limitNum = limit || 10
         const skip = (pageNum - 1) * limitNum
-        const products = await Product.aggregate([
-            {
-                $skip: skip
-            },
-            {
-                $limit: limitNum
-            },
+        const filterOptions = getProductFilterOptions(req.query)
+        const data = await Product.aggregate([
             {
                 $lookup: {
                     from: 'categories',
@@ -192,14 +188,29 @@ export const getGridData = async (req, res) => {
                         }
                     }
                 },
+            },
+            {
+                $match: { ...filterOptions }
+            },
+            {
+                $facet: {
+                    resultData: [
+                        {
+                            $skip: skip
+                        },
+                        {
+                            $limit: limitNum
+                        }
+                    ],
+                    totalRecords: [{ $count: "count" }]
+                }
             }
         ])
-        const total = await Product.count()
         res.json({
             status: "success",
-            data: products,
+            data: data[0].resultData,
             meta: {
-                total
+                total: data[0].totalRecords[0].count
             }
         })
     } catch (error) {

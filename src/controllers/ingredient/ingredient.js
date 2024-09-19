@@ -1,6 +1,7 @@
 import Ingredient from "../../models/ingredient/ingredient"
 import IngredientDiary from "../../models/ingredient/ingredientDiary"
 import { convertNameToCode } from "../../utils/convertNameToCode"
+import { getIngredientFilterOptions } from "../../utils/getFilterOption"
 import { getIngredientDiaryContent } from "../../utils/ingredientDairyContent"
 
 export const createIngredient = async (req, res) => {
@@ -10,9 +11,7 @@ export const createIngredient = async (req, res) => {
             ...item,
             code: convertNameToCode(item.name)
         }))
-        console.log(mappedData);
-        const ingredient = await Promise.all(mappedData.map(item => Ingredient(item).save()))
-
+        const ingredient = await Ingredient.insertMany(mappedData)
         const diaryContent = getIngredientDiaryContent('create', { ingredient })
         await IngredientDiary({
             user: "Son Dzaivcl",
@@ -52,8 +51,9 @@ export const getIngredientGridData = async (req, res) => {
         const pageNum = page || 1
         const limitNum = limit || 10
         const skip = (pageNum - 1) * limitNum
-        const ingredients = await Ingredient.find({}).skip(skip).limit(limitNum).populate("category", "name code").select("name quantity unit status code category")
-        const count = await Ingredient.count()
+        const filterOptions = getIngredientFilterOptions(req.query)
+        const ingredients = await Ingredient.find({ ...filterOptions }).skip(skip).limit(limitNum).populate("category", "name code").select("name quantity unit status code category")
+        const count = await Ingredient.countDocuments({ ...filterOptions })
         res.json({
             status: "success",
             meta: {
@@ -109,6 +109,28 @@ export const updateIngredientQuantity = async (req, res) => {
         res.json({
             status: 'success',
             message: `Đã ${type === 'add-quantity' ? 'thêm vào' : 'bớt'} ${resData.name} ${additionalQuantity}(${resData.unit})`
+        })
+    } catch (error) {
+        res.status(400).json({
+            status: "error",
+            message: error.message
+        })
+    }
+}
+
+export const existIngredientByCode = async (req, res) => {
+    try {
+        const { code } = req.query
+        const data = await Ingredient.findOne({ code })
+        if (data) {
+            return res.json({
+                exist: true,
+                message: `${data.name} đã tồn tại`
+            })
+        }
+
+        res.json({
+            exist: false,
         })
     } catch (error) {
         res.status(400).json({
