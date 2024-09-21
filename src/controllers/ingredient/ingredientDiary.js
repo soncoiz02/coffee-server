@@ -1,4 +1,5 @@
 import IngredientDiary from "../../models/ingredient/ingredientDiary";
+import { getIngredientDiaryFilterOptions } from "../../utils/getFilterOption";
 
 export const createDiary = async (req, res) => {
     try {
@@ -21,8 +22,9 @@ export const getDiary = async (req, res) => {
         const pageNum = page || 1
         const limitNum = limit || 10
         const skip = (pageNum - 1) * limitNum
-        const data = await IngredientDiary.find({}).skip(skip).limit(limitNum).select("user content createdAt")
-        const count = await IngredientDiary.count()
+        const filterOptions = getIngredientDiaryFilterOptions(req.query)
+        const data = await IngredientDiary.find({ ...filterOptions }).skip(skip).limit(limitNum).select("user content createdAt")
+        const count = await IngredientDiary.countDocuments({ ...filterOptions })
 
         res.json({
             status: 'success',

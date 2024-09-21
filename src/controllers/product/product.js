@@ -1,3 +1,5 @@
+import Ingredient from "../../models/ingredient/ingredient";
+import Category from "../../models/product/category";
 import Product from "../../models/product/product";
 import ProductIngredient from "../../models/product/productIngredient";
 import ProductPrice from "../../models/product/productPrice";
@@ -55,8 +57,8 @@ export const getListProduct = async (req, res) => {
 export const getGridData = async (req, res) => {
     try {
         const { page, limit } = req.query
-        const pageNum = page || 1
-        const limitNum = limit || 10
+        const pageNum = +page || 1
+        const limitNum = +limit || 10
         const skip = (pageNum - 1) * limitNum
         const filterOptions = getProductFilterOptions(req.query)
         const data = await Product.aggregate([
@@ -293,6 +295,26 @@ export const getTotalAllProductCanCreate = async (req, res) => {
         })
 
         res.json(productCanCreate)
+    } catch (error) {
+        res.status(400).json({
+            status: "error",
+            message: error.message
+        })
+    }
+}
+
+export const getProductFilterValueOptions = async (req, res) => {
+    try {
+        const categories = await Category.find({ status: true }).select("name code")
+        const ingredients = await Ingredient.find({ status: true }).select("name code")
+
+        res.json({
+            status: 'success',
+            data: {
+                categories,
+                ingredients
+            }
+        })
     } catch (error) {
         res.status(400).json({
             status: "error",

@@ -19,6 +19,7 @@
     "nodemon": "^2.0.19"
   },
   "dependencies": {
+    "@date-fns/tz": "^1.0.2",
     "@types/date-fns": "^2.6.0",
     "cors": "^2.8.5",
     "date-fns": "^2.29.3",

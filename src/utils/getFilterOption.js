@@ -1,3 +1,5 @@
+import { TZDate } from "@date-fns/tz"
+import { endOfDay, startOfDay } from "date-fns"
 import mongoose from "mongoose"
 
 export const getIngredientFilterOptions = (queryParams) => {
@@ -20,6 +22,8 @@ export const getIngredientFilterOptions = (queryParams) => {
 }
 
 export const getProductFilterOptions = (queryParams) => {
+    console.log(queryParams);
+
     const filterOptions = {}
     if (queryParams.hasOwnProperty("category")) {
         filterOptions["category.code"] = queryParams.category
@@ -29,6 +33,34 @@ export const getProductFilterOptions = (queryParams) => {
     }
     if (queryParams.hasOwnProperty("status")) {
         filterOptions.status = !!queryParams.status
+    }
+    if (queryParams.hasOwnProperty("ingredient")) {
+        filterOptions["ingredients.data.ingredient.code"] = {
+            $in: queryParams.ingredient
+        }
+    }
+    console.log(filterOptions);
+
+    return filterOptions
+}
+
+export const getIngredientDiaryFilterOptions = (queryParams) => {
+    const filterOptions = {}
+
+    if (queryParams.hasOwnProperty('user')) {
+        filterOptions.user = { '$regex': queryParams.user, '$options': 'i' }
+    }
+
+    if (queryParams.hasOwnProperty('createdAt')) {
+        const [d, m, y] = queryParams.createdAt.split("/")
+        const date = new TZDate(+y, +m - 1, +d)
+        const startOfDate = startOfDay(date)
+        const endOfDate = endOfDay(date)
+
+        filterOptions.createdAt = {
+            $gte: startOfDate,
+            $lt: endOfDate
+        }
     }
 
     return filterOptions
