@@ -192,7 +192,9 @@ export const getGridData = async (req, res) => {
                 },
             },
             {
-                $match: { ...filterOptions }
+                $match: {
+                    ...filterOptions
+                }
             },
             {
                 $facet: {
@@ -314,6 +316,158 @@ export const getProductFilterValueOptions = async (req, res) => {
                 categories,
                 ingredients
             }
+        })
+    } catch (error) {
+        res.status(400).json({
+            status: "error",
+            message: error.message
+        })
+    }
+}
+
+export const getProductByCode = async (req, res) => {
+    try {
+        const { code } = req.params
+        const data = await Product.aggregate([
+            {
+                $match: {
+                    code
+                }
+            },
+            {
+                $lookup: {
+                    from: 'categories',
+                    localField: 'category',
+                    foreignField: '_id',
+                    as: 'category',
+                    pipeline: [
+                        {
+                            $project: {
+                                name: 1,
+                                code: 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $unwind: "$category"
+            },
+            {
+                $lookup: {
+                    from: 'productingredients',
+                    localField: '_id',
+                    foreignField: 'productId',
+                    as: 'ingredients',
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: 'ingredients',
+                                localField: 'ingredients.ingredient',
+                                foreignField: '_id',
+                                as: 'productIngredients',
+                            }
+                        },
+                        {
+                            $project: {
+                                "_id": 0,
+                                priceType: 1,
+                                data: {
+                                    $map: {
+                                        input: "$ingredients",
+                                        as: "ingre",
+                                        in: {
+                                            quantity: "$$ingre.quantity",
+                                            ingredient: {
+                                                $arrayElemAt: [
+                                                    {
+                                                        $filter: {
+                                                            input: "$productIngredients",
+                                                            as: "ingredientDetail",
+                                                            cond: { $eq: ["$$ingredientDetail._id", "$$ingre.ingredient"] }
+                                                        }
+                                                    },
+                                                    0
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $lookup: {
+                    from: 'productpricebysizes',
+                    localField: '_id',
+                    foreignField: 'productId',
+                    as: 'priceBySize',
+                    pipeline: [
+                        {
+                            $project: {
+                                priceBySize: 1,
+                                "_id": 0,
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $unwind: "$priceBySize"
+            },
+            {
+                $addFields: {
+                    priceBySize: "$priceBySize.priceBySize"
+                }
+            },
+            {
+                $lookup: {
+                    from: 'productsizes',
+                    localField: 'priceBySize.size',
+                    foreignField: 'code',
+                    as: 'size',
+                }
+            },
+            {
+                $project: {
+                    name: 1,
+                    img: 1,
+                    priceType: 1,
+                    singlePrice: 1,
+                    status: 1,
+                    code: 1,
+                    category: 1,
+                    ingredients: 1,
+                    priceBySize: {
+                        $map: {
+                            input: "$priceBySize",
+                            as: "price",
+                            in: {
+                                price: "$$price.price",
+                                size: {
+                                    $arrayElemAt: [
+                                        {
+                                            $filter: {
+                                                input: "$size",
+                                                as: "priceDetail",
+                                                cond: { $eq: ["$$priceDetail.code", "$$price.size"] }
+                                            }
+                                        },
+                                        0
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+            }
+        ])
+
+        res.json({
+            status: "success",
+            data: data[0]
         })
     } catch (error) {
         res.status(400).json({

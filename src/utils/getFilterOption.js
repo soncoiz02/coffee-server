@@ -22,8 +22,6 @@ export const getIngredientFilterOptions = (queryParams) => {
 }
 
 export const getProductFilterOptions = (queryParams) => {
-    console.log(queryParams);
-
     const filterOptions = {}
     if (queryParams.hasOwnProperty("category")) {
         filterOptions["category.code"] = queryParams.category
@@ -39,8 +37,20 @@ export const getProductFilterOptions = (queryParams) => {
             $in: queryParams.ingredient
         }
     }
-    console.log(filterOptions);
-
+    if (queryParams.hasOwnProperty("priceStart") && queryParams.hasOwnProperty("priceEnd")) {
+        filterOptions["$and"] = [
+            {
+                "priceBySize.price": {
+                    "$gte": +queryParams.priceStart
+                }
+            },
+            {
+                "priceBySize.price": {
+                    "$lte": +queryParams.priceEnd
+                }
+            }
+        ]
+    }
     return filterOptions
 }
 
