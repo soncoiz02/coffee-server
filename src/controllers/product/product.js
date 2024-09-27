@@ -9,9 +9,17 @@ import { getProductFilterOptions } from "../../utils/getFilterOption";
 export const createProduct = async (req, res) => {
     try {
         const { product, priceBySize, ingredients } = req.body.data
+        const productCode = convertNameToCode(product.name)
+        const existProduct = await Product.findOne({ code: productCode })
+        if (existProduct) {
+            return res.status(400).json({
+                status: "error",
+                message: "Tên sản phẩm đã tồn tại"
+            })
+        }
         const productData = {
             ...product,
-            code: convertNameToCode(product.name)
+            code: productCode
         }
         const newProduct = await Product(productData).save()
         const productId = newProduct._id
